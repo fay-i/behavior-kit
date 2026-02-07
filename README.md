@@ -14,7 +14,19 @@ curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh 
 curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash
 ```
 
-Both add behavior-kit files to `.git/info/exclude` so they stay local — no impact on your team's repo.
+**Local-only install** (hidden from git, won't affect teammates):
+```bash
+curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash -s -- --local
+```
+
+The `--local` flag adds behavior-kit paths to `.git/info/exclude` so the files stay invisible to git.
+
+**Shell helper** (optional) — add to your `.zshrc` or `.bashrc`:
+```bash
+bk() { curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash -s -- "$@"; }
+```
+
+Then use `bk`, `bk --local`, or `bk --init my-project`.
 
 ## Workflow
 

@@ -4,6 +4,7 @@ set -euo pipefail
 # behavior-kit installer
 # Usage:
 #   Install into existing repo:  curl -fsSL ...install.sh | bash
+#   Install locally (hidden):    curl -fsSL ...install.sh | bash -s -- --local
 #   Create new project:          curl -fsSL ...install.sh | bash -s -- --init <project-name>
 
 REPO="fay-i/behavior-kit"
@@ -19,6 +20,7 @@ dim() { echo -e "${DIM}  $1${NC}"; }
 
 # Parse flags
 INIT=false
+LOCAL=false
 PROJECT_NAME=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,6 +28,10 @@ while [[ $# -gt 0 ]]; do
       INIT=true
       PROJECT_NAME="${2:?Usage: install.sh --init <project-name>}"
       shift 2
+      ;;
+    --local)
+      LOCAL=true
+      shift
       ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
@@ -92,13 +98,6 @@ FILES=(
   ".behavior-kit/scripts/check-prereqs.sh"
 )
 
-# Paths to exclude from git tracking
-EXCLUDE_PATHS=(
-  ".claude/commands/bk.*.md"
-  ".cursor/rules/bk-*.mdc"
-  ".behavior-kit/"
-)
-
 # Download each file
 for file in "${FILES[@]}"; do
   mkdir -p "$(dirname "$file")"
@@ -109,18 +108,26 @@ done
 # Make scripts executable
 chmod +x .behavior-kit/scripts/init-feature.sh .behavior-kit/scripts/check-prereqs.sh
 
-# Add to .git/info/exclude (local gitignore)
-EXCLUDE_FILE="$(git rev-parse --git-dir)/info/exclude"
-mkdir -p "$(dirname "$EXCLUDE_FILE")"
-touch "$EXCLUDE_FILE"
+# --local: hide bk files from git via .git/info/exclude
+if $LOCAL; then
+  EXCLUDE_PATHS=(
+    ".claude/commands/bk.*.md"
+    ".cursor/rules/bk-*.mdc"
+    ".behavior-kit/"
+  )
 
-for pattern in "${EXCLUDE_PATHS[@]}"; do
-  if ! grep -qF "$pattern" "$EXCLUDE_FILE" 2>/dev/null; then
-    echo "$pattern" >> "$EXCLUDE_FILE"
-  fi
-done
+  EXCLUDE_FILE="$(git rev-parse --git-dir)/info/exclude"
+  mkdir -p "$(dirname "$EXCLUDE_FILE")"
+  touch "$EXCLUDE_FILE"
 
-info "Added patterns to .git/info/exclude (local only, won't affect teammates)"
+  for pattern in "${EXCLUDE_PATHS[@]}"; do
+    if ! grep -qF "$pattern" "$EXCLUDE_FILE" 2>/dev/null; then
+      echo "$pattern" >> "$EXCLUDE_FILE"
+    fi
+  done
+
+  info "Added patterns to .git/info/exclude (local only, won't affect teammates)"
+fi
 
 # Create specs directory
 mkdir -p specs
