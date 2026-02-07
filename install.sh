@@ -2,7 +2,9 @@
 set -euo pipefail
 
 # behavior-kit installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash
+# Usage:
+#   Install into existing repo:  curl -fsSL ...install.sh | bash
+#   Create new project:          curl -fsSL ...install.sh | bash -s -- --init <project-name>
 
 REPO="fay-i/behavior-kit"
 BRANCH="main"
@@ -15,10 +17,57 @@ NC='\033[0m'
 info() { echo -e "${GREEN}[behavior-kit]${NC} $1"; }
 dim() { echo -e "${DIM}  $1${NC}"; }
 
-# Verify we're in a git repo
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
-  echo "Error: not a git repository. Run this from your project root." >&2
-  exit 1
+# Parse flags
+INIT=false
+PROJECT_NAME=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --init)
+      INIT=true
+      PROJECT_NAME="${2:?Usage: install.sh --init <project-name>}"
+      shift 2
+      ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
+  esac
+done
+
+# --init: create new project directory and git repo
+if $INIT; then
+  if [[ -d "$PROJECT_NAME" ]]; then
+    echo "Error: directory '$PROJECT_NAME' already exists." >&2
+    exit 1
+  fi
+  info "Creating project: $PROJECT_NAME"
+  mkdir -p "$PROJECT_NAME"
+  cd "$PROJECT_NAME"
+  git init -b main --quiet
+  cat > .gitignore <<'GITIGNORE'
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+
+# Environment
+.env
+.env.local
+GITIGNORE
+  mkdir -p specs
+else
+  # Verify we're in a git repo
+  if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo "Error: not a git repository. Use --init <name> to create a new project, or run from an existing repo." >&2
+    exit 1
+  fi
 fi
 
 info "Installing behavior-kit..."
@@ -74,6 +123,13 @@ info "Added patterns to .git/info/exclude (local only, won't affect teammates)"
 
 # Create specs directory
 mkdir -p specs
+
+# --init: make initial commit
+if $INIT; then
+  git add .gitignore specs/
+  git commit --quiet -m "Initial commit"
+  info "Created git repo with initial commit on main"
+fi
 
 echo ""
 info "Done! Commands available:"

@@ -4,11 +4,17 @@ Behavior-first development framework for Claude Code and Cursor. Every task is a
 
 ## Install
 
+**New project:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash -s -- --init my-project
+```
+
+**Existing repo:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash
 ```
 
-This installs commands and templates into your project and adds them to `.git/info/exclude` so they stay local — no impact on your team's repo.
+Both add behavior-kit files to `.git/info/exclude` so they stay local — no impact on your team's repo.
 
 ## Workflow
 
