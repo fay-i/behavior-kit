@@ -89,6 +89,7 @@ FILES=(
   ".behavior-kit/templates/plan-template.md"
   ".behavior-kit/templates/behavior-template.md"
   ".behavior-kit/scripts/init-feature.sh"
+  ".behavior-kit/scripts/check-prereqs.sh"
 )
 
 # Paths to exclude from git tracking
@@ -106,7 +107,7 @@ for file in "${FILES[@]}"; do
 done
 
 # Make scripts executable
-chmod +x .behavior-kit/scripts/init-feature.sh
+chmod +x .behavior-kit/scripts/init-feature.sh .behavior-kit/scripts/check-prereqs.sh
 
 # Add to .git/info/exclude (local gitignore)
 EXCLUDE_FILE="$(git rev-parse --git-dir)/info/exclude"

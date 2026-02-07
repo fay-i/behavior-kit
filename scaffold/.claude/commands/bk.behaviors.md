@@ -6,6 +6,10 @@ description: "Decompose acceptance criteria into atomic, testable behaviors"
 
 You are decomposing a feature spec into atomic, testable behaviors. The user will provide the feature directory as $ARGUMENTS (e.g., `specs/001-user-login`), or you should identify the current feature from the active branch.
 
+## Gate
+
+Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+
 ## Instructions
 
 1. Read the constitution at `.behavior-kit/memory/constitution.md`

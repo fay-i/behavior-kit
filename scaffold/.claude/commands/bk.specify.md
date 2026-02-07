@@ -6,6 +6,10 @@ description: "Generate a behavior-first spec with Given/When/Then acceptance cri
 
 You are writing a feature specification. The user will provide a feature description as $ARGUMENTS.
 
+## Gate
+
+Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+
 ## Instructions
 
 1. Read the constitution at `.behavior-kit/memory/constitution.md`

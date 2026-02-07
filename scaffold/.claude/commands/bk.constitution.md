@@ -12,6 +12,7 @@ You are setting up or updating the project constitution.
 2. If this is a new project, present Articles I-V (the defaults) and explain each briefly
 3. Ask the user (max 3 questions inline) what project-specific principles to add as Articles VI+
 4. Update the constitution file with any new articles
+5. Add or update the ratified line at the bottom of the file: `Ratified: YYYY-MM-DD`
 
 ## Rules
 - Articles I-V are foundational — they can be amended but not removed

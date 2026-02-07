@@ -6,6 +6,8 @@ globs:
 
 # bk-specify — The WHAT and WHY
 
+**Gate:** Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+
 When writing a feature specification:
 
 1. Read the constitution at `.behavior-kit/memory/constitution.md`

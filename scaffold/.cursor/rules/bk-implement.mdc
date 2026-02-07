@@ -6,6 +6,8 @@ globs:
 
 # bk-implement — Execute Behaviors
 
+**Gate:** Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+
 When implementing behaviors:
 
 1. Read the constitution and behaviors for the feature

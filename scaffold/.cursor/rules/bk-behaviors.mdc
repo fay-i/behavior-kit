@@ -6,6 +6,8 @@ globs:
 
 # bk-behaviors — The HOW (as Testable Behaviors)
 
+**Gate:** Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+
 When decomposing a spec into behaviors:
 
 1. Read the constitution, spec, and plan for the feature
