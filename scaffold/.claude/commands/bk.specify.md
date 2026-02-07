@@ -9,7 +9,7 @@ You are writing a feature specification. The user will provide a feature descrip
 ## Instructions
 
 1. Read the constitution at `.behavior-kit/memory/constitution.md`
-2. Run `.behavior-kit/scripts/init-feature.sh "$ARGUMENTS"` to create the feature branch and directory
+2. Run `.behavior-kit/scripts/init-feature.sh "$ARGUMENTS"` to create the feature branch and directory. The script assigns the next sequential number — every spec gets a unique, monotonically increasing number regardless of feature name.
 3. Read the spec template at `.behavior-kit/templates/spec-template.md`
 4. Ask the user up to 3 inline clarification questions if needed (do not stop to wait — batch them)
 5. Write the spec to `specs/NNN-feature-name/spec.md`
