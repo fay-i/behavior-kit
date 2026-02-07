@@ -1,0 +1,27 @@
+---
+description: Research existing codebase context for a feature spec
+globs:
+  - "specs/*/plan.md"
+---
+
+# bk-plan — The CONTEXT (Research Only)
+
+When researching codebase context for a feature:
+
+1. Read the constitution at `.behavior-kit/memory/constitution.md`
+2. Read the spec at `specs/NNN-feature-name/spec.md`
+3. Use the plan template at `.behavior-kit/templates/plan-template.md`
+4. Explore the existing codebase: patterns, conventions, relevant files
+5. Write the plan to `specs/NNN-feature-name/plan.md`
+
+## Rules
+- Document EXISTING patterns, not proposed ones
+- Reference snippets come from EXISTING code only
+- Open questions must include a proposed answer
+
+## Forbidden
+- Inventing data models or schemas
+- Proposing API contracts or endpoint shapes
+- Suggesting project structure or new directories
+- Writing new code or pseudocode
+- Making architectural decisions not already present in the codebase
