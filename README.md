@@ -40,6 +40,10 @@ Then use `bk`, `bk --local`, or `bk --init my-project`.
 /bk.behaviors        Decompose into atomic, testable behaviors
         ↓
 /bk.implement        Execute behaviors test-first (red → green → refactor)
+        ↓
+   push & open PR
+        ↓
+/bk.iterate          Address PR review feedback (re-run per round)
 ```
 
 ## Philosophy
@@ -51,6 +55,19 @@ Then use `bk`, `bk --local`, or `bk --init my-project`.
 3. **Organic Architecture** — Models, services, helpers emerge from behavior needs, never pre-planned
 4. **Test-Behavior Parity** — Each behavior = one test. Full behavior coverage = full test coverage
 5. **Progressive Context** — Each phase loads only what it needs
+
+## PR Review Iteration
+
+After `/bk.implement`, push your branch and open a PR. When reviewers leave feedback, run `/bk.iterate` to address it:
+
+- Fetches all review comments via `gh`
+- Categorizes each as actionable, question, or acknowledgment
+- Makes code changes one comment at a time (test-first when needed)
+- Replies on GitHub and resolves threads
+- Commits as `R1.01: [description]`, `R1.02: ...`
+- Tracks everything in `specs/NNN-feature-name/review.md`
+
+Re-run `/bk.iterate` for each new round of feedback. The round number auto-increments.
 
 ## What this is NOT
 
