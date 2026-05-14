@@ -11,7 +11,7 @@ globs:
 When writing a feature specification:
 
 1. Read the constitution at `.behavior-kit/memory/constitution.md`
-2. Run `.behavior-kit/scripts/init-feature.sh "<feature-name>"` to create the feature branch and directory
+2. Derive a short feature name — a 3-5 word kebab-case summary, not the full description (e.g. `create-grow-screen`) — then run `.behavior-kit/scripts/init-feature.sh "<short-feature-name>"` to create the feature branch and directory
 3. Use the spec template at `.behavior-kit/templates/spec-template.md`
 4. Ask up to 3 inline clarification questions if needed
 5. Write the spec to `specs/NNN-feature-name/spec.md`

@@ -13,7 +13,7 @@ Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails,
 ## Instructions
 
 1. Read the constitution at `.behavior-kit/memory/constitution.md`
-2. Run `.behavior-kit/scripts/init-feature.sh "$ARGUMENTS"` to create the feature branch and directory. The script assigns the next sequential number — every spec gets a unique, monotonically increasing number regardless of feature name.
+2. Derive a short feature name — a 3-5 word kebab-case summary of the feature, **not** the full description (e.g. `create-grow-screen`). Run `.behavior-kit/scripts/init-feature.sh "<short-feature-name>"` to create the feature branch and directory. The script assigns the next sequential number — every spec gets a unique, monotonically increasing number regardless of feature name. The script truncates over-long input defensively, but you must still pass a concise summary.
 3. Read the spec template at `.behavior-kit/templates/spec-template.md`
 4. Ask the user up to 3 inline clarification questions if needed (do not stop to wait — batch them)
 5. Write the spec to `specs/NNN-feature-name/spec.md`

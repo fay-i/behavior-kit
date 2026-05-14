@@ -2,10 +2,19 @@
 set -euo pipefail
 
 # Usage: init-feature.sh <feature-name>
+# <feature-name> should be a short summary (3-5 words); it becomes the branch
+# slug and spec directory name. Over-long input is truncated defensively so a
+# full feature description can never produce an unusable branch name.
 # Creates a numbered feature branch and spec directory.
 
 FEATURE_NAME="${1:?Usage: init-feature.sh <feature-name>}"
-SLUG=$(echo "$FEATURE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-')
+SLUG=$(echo "$FEATURE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-' | tr -s '-')
+
+# Keep the slug short: cap at 5 words and 50 chars, trimmed to a word boundary
+SLUG=$(echo "$SLUG" | cut -d- -f1-5)
+SLUG=${SLUG:0:50}
+SLUG=${SLUG#-}
+SLUG=${SLUG%-}
 
 # Find next feature number from local specs AND remote branches
 SPECS_DIR="specs"
