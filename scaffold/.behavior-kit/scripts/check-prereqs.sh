@@ -15,3 +15,8 @@ if ! grep -q '^Ratified:' "$CONSTITUTION"; then
   echo "Error: Constitution has not been ratified. Run /bk.constitution first." >&2
   exit 1
 fi
+
+if ! grep -qE '^Worktrees:' "$CONSTITUTION"; then
+  echo "Error: Constitution is missing the Worktrees decision. Run /bk.constitution to record whether this project uses git worktrees for parallel agents." >&2
+  exit 1
+fi
