@@ -6,7 +6,7 @@ globs:
 
 # bk-iterate — Address PR Review Feedback
 
-**Gate:** Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user. Then verify an open PR exists via `gh pr view --json number,state`.
+**Gate:** Before anything else, run `.behavior-kit/scripts/check-prereqs.sh iterate`. If it fails, stop and relay its error message to the user. Then verify an open PR exists via `gh pr view --json number,state`.
 
 When addressing PR review feedback:
 

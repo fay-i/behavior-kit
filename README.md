@@ -52,14 +52,30 @@ Each command is a slash command in Claude Code (and an equivalent rule in Cursor
 
 | Command | Purpose | Reads | Writes |
 | --- | --- | --- | --- |
-| `/bk.constitution` | Define or amend the 5 foundational articles plus any project-specific ones. Run once per project. | `.behavior-kit/memory/constitution.md` | `.behavior-kit/memory/constitution.md` |
-| `/bk.specify <description>` | Turn a feature idea into a Given/When/Then spec. Creates the feature branch and `specs/NNN-feature-name/` directory via `init-feature.sh`. Max 3 inline clarifying questions. | constitution, spec template | `specs/NNN-feature-name/spec.md` |
-| `/bk.plan` | Research-only pass over the existing codebase to capture patterns, touch points, and open questions. Does not propose architecture. | constitution, `spec.md`, plan template, codebase | `specs/NNN-feature-name/plan.md` |
+| `/bk.constitution` | Define or amend the 5 foundational articles plus any project-specific ones. Asks the worktree decision first (`Worktrees: enabled` or `disabled`) and runs `setup-worktrees.sh` when enabled. Run once per project. | `.behavior-kit/memory/constitution.md` | `.behavior-kit/memory/constitution.md`, optionally `.worktrees/` + `.gitignore` |
+| `/bk.specify <description>` | Turn a feature idea into a Given/When/Then spec. Creates the feature branch and `specs/NNN-feature-name/` directory via `init-feature.sh`; when worktrees are enabled, also provisions `.worktrees/NNN-slug/` so the spec (and every later phase) is isolated from `main`. Max 3 inline clarifying questions. | constitution, spec template | feature branch, `specs/NNN-feature-name/spec.md`, optionally `.worktrees/NNN-slug/` |
+| `/bk.plan` | Research-only pass over the existing codebase to capture patterns, touch points, and open questions. Before researching, scans sibling specs and active worktrees and **forces a turn with the user** on any scope overlap or unmerged dependency. Does not propose architecture. | constitution, `spec.md`, sibling specs, plan template, codebase | `specs/NNN-feature-name/plan.md` (incl. Dependencies / Coordination verdicts) |
 | `/bk.behaviors` | Decompose each acceptance criterion into atomic behaviors (Action + Input + Output + Test) with branches for edges/errors. Builds an AC → behavior coverage matrix. | constitution, `spec.md`, `plan.md`, behavior template | `specs/NNN-feature-name/behaviors.md` |
 | `/bk.implement` | Execute behaviors one at a time, test-first (red → green → refactor). Commits each as `B001: …`. Architecture (models, helpers, routes) emerges as behaviors demand it. | constitution, `behaviors.md` | source code + tests; commits per behavior |
 | `/bk.iterate` | Address one round of PR review feedback. Fetches comments via `gh`, categorizes them, makes changes one comment at a time, replies and resolves threads. Commits as `R1.01: …`. Re-run per round. | constitution, feature dir, PR comments via `gh` | code changes, GitHub replies, `specs/NNN-feature-name/review.md` |
 
-All feature-scoped commands run `.behavior-kit/scripts/check-prereqs.sh` first and stop if prerequisites are missing (e.g. no constitution, no spec). `/bk.iterate` additionally requires an authenticated `gh` CLI and an open PR on the current branch.
+All feature-scoped commands run `.behavior-kit/scripts/check-prereqs.sh <phase>` first and stop if prerequisites are missing — no constitution, no `Worktrees:` decision, or (for `plan|behaviors|implement|iterate`) running on `main`/`master`/`trunk`/`develop` or off the matching `feature/NNN-slug` branch. When worktrees are enabled, those same phases must run from inside the spec's `.worktrees/NNN-slug/` checkout; `/bk.specify` is the one phase that may legitimately start on `main`, because it's the phase that creates the feature branch. `/bk.iterate` additionally requires an authenticated `gh` CLI and an open PR on the current branch.
+
+## Parallel agents & worktrees
+
+behavior-kit is built to run multiple agents in parallel without them stepping on each other's files. The seam is a single line in the constitution:
+
+```
+Worktrees: enabled    # or: disabled
+```
+
+`/bk.constitution` records this answer the first time it runs and `setup-worktrees.sh` creates a gitignored `.worktrees/` directory inside the project root (kept inside the root because sandboxed AI assistants often can't reach sibling paths). With worktrees enabled:
+
+- `/bk.specify` provisions `.worktrees/NNN-slug/` for every new spec and the agent works there for the rest of the feature's lifecycle.
+- `check-prereqs.sh` refuses to run `plan|behaviors|implement|iterate` on the trunk or outside the matching worktree, so an agent can't accidentally commit feature work to `main`.
+- `/bk.plan` enumerates sibling specs and active worktrees before research and forces a turn with the user if the new feature overlaps with — or depends on unmerged work from — another in-flight spec, then records the verdict in the plan's "Dependencies / Coordination" section.
+
+With worktrees disabled the single-tree workflow still works; the trunk guard still fires (`feature/NNN-slug` is required), but no worktree path is enforced.
 
 ## Philosophy
 
@@ -114,5 +130,7 @@ Re-run `/bk.iterate` for each new round of feedback. The round number auto-incre
 Remove the installed files:
 
 ```bash
-rm -rf .claude/commands/bk.*.md .cursor/rules/bk-*.mdc .behavior-kit/
+rm -rf .claude/commands/bk.*.md .cursor/rules/bk-*.mdc .behavior-kit/ .worktrees/
 ```
+
+If you used worktrees, run `git worktree prune` afterwards so git forgets the removed checkouts.

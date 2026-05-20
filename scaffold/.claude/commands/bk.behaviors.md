@@ -8,7 +8,7 @@ You are decomposing a feature spec into atomic, testable behaviors. The user wil
 
 ## Gate
 
-Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+Before anything else, run `.behavior-kit/scripts/check-prereqs.sh behaviors`. If it fails, stop and relay its error message to the user.
 
 ## Instructions
 

@@ -78,10 +78,38 @@ while git show-ref --verify --quiet "refs/heads/$BRANCH" \
   BRANCH="feature/${NEXT}-${SLUG}"
 done
 
-# Create branch and directory
-git checkout -b "$BRANCH"
-mkdir -p "$FEATURE_DIR"
+# If the constitution opted into worktrees, every new spec lands in its own
+# .worktrees/<NNN-slug> checkout so parallel agents never share a working tree.
+# Otherwise fall back to the legacy single-tree flow (checkout branch in place).
+CONSTITUTION=".behavior-kit/memory/constitution.md"
+WORKTREES_ENABLED=false
+if [[ -f "$CONSTITUTION" ]] && grep -qE '^Worktrees:[[:space:]]*enabled[[:space:]]*$' "$CONSTITUTION"; then
+  WORKTREES_ENABLED=true
+fi
 
-echo "Created branch: $BRANCH"
-echo "Created directory: $FEATURE_DIR"
-echo "$FEATURE_DIR"
+if $WORKTREES_ENABLED; then
+  WORKTREE_PATH=".worktrees/${NEXT}-${SLUG}"
+  if [[ -e "$WORKTREE_PATH" ]]; then
+    echo "Error: worktree path '$WORKTREE_PATH' already exists." >&2
+    exit 1
+  fi
+  mkdir -p .worktrees
+  # Branch is created off the current HEAD; agents run their spec/plan/implement
+  # phases entirely inside the worktree so their files never collide with main.
+  git worktree add -b "$BRANCH" "$WORKTREE_PATH" HEAD >/dev/null
+  mkdir -p "$WORKTREE_PATH/$FEATURE_DIR"
+
+  echo "Created branch: $BRANCH"
+  echo "Created worktree: $WORKTREE_PATH"
+  echo "Created directory: $WORKTREE_PATH/$FEATURE_DIR"
+  echo ""
+  echo "Next: cd $WORKTREE_PATH  (all subsequent /bk.* commands run from inside the worktree)"
+  echo "$WORKTREE_PATH/$FEATURE_DIR"
+else
+  git checkout -b "$BRANCH"
+  mkdir -p "$FEATURE_DIR"
+
+  echo "Created branch: $BRANCH"
+  echo "Created directory: $FEATURE_DIR"
+  echo "$FEATURE_DIR"
+fi

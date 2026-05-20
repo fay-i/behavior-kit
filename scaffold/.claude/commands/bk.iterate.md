@@ -8,7 +8,7 @@ You are addressing PR review feedback one comment at a time. Each actionable com
 
 ## Gate
 
-Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+Before anything else, run `.behavior-kit/scripts/check-prereqs.sh iterate`. If it fails, stop and relay its error message to the user.
 
 Then verify an open PR exists for the current branch:
 
