@@ -8,7 +8,7 @@ You are implementing behaviors one at a time using test-first development. The u
 
 ## Gate
 
-Before anything else, run `.behavior-kit/scripts/check-prereqs.sh`. If it fails, stop and relay its error message to the user.
+Before anything else, run `.behavior-kit/scripts/check-prereqs.sh implement`. If it fails, stop and relay its error message to the user.
 
 ## Instructions
 
