@@ -46,6 +46,21 @@ Then use `bk`, `bk --local`, or `bk --init my-project`.
 /bk.iterate          Address PR review feedback (re-run per round)
 ```
 
+## Commands
+
+Each command is a slash command in Claude Code (and an equivalent rule in Cursor). All feature-scoped commands accept the feature directory as an argument (e.g. `/bk.plan specs/001-user-login`) or infer it from the current branch.
+
+| Command | Purpose | Reads | Writes |
+| --- | --- | --- | --- |
+| `/bk.constitution` | Define or amend the 5 foundational articles plus any project-specific ones. Run once per project. | `.behavior-kit/memory/constitution.md` | `.behavior-kit/memory/constitution.md` |
+| `/bk.specify <description>` | Turn a feature idea into a Given/When/Then spec. Creates the feature branch and `specs/NNN-feature-name/` directory via `init-feature.sh`. Max 3 inline clarifying questions. | constitution, spec template | `specs/NNN-feature-name/spec.md` |
+| `/bk.plan` | Research-only pass over the existing codebase to capture patterns, touch points, and open questions. Does not propose architecture. | constitution, `spec.md`, plan template, codebase | `specs/NNN-feature-name/plan.md` |
+| `/bk.behaviors` | Decompose each acceptance criterion into atomic behaviors (Action + Input + Output + Test) with branches for edges/errors. Builds an AC → behavior coverage matrix. | constitution, `spec.md`, `plan.md`, behavior template | `specs/NNN-feature-name/behaviors.md` |
+| `/bk.implement` | Execute behaviors one at a time, test-first (red → green → refactor). Commits each as `B001: …`. Architecture (models, helpers, routes) emerges as behaviors demand it. | constitution, `behaviors.md` | source code + tests; commits per behavior |
+| `/bk.iterate` | Address one round of PR review feedback. Fetches comments via `gh`, categorizes them, makes changes one comment at a time, replies and resolves threads. Commits as `R1.01: …`. Re-run per round. | constitution, feature dir, PR comments via `gh` | code changes, GitHub replies, `specs/NNN-feature-name/review.md` |
+
+All feature-scoped commands run `.behavior-kit/scripts/check-prereqs.sh` first and stop if prerequisites are missing (e.g. no constitution, no spec). `/bk.iterate` additionally requires an authenticated `gh` CLI and an open PR on the current branch.
+
 ## Philosophy
 
 **5 articles govern everything:**

@@ -16,25 +16,67 @@ SLUG=${SLUG:0:50}
 SLUG=${SLUG#-}
 SLUG=${SLUG%-}
 
-# Find next feature number from local specs AND remote branches
+# Find the next feature number by taking the max across every source that
+# could possibly have already used one:
+#   1. Local spec directories (specs/NNN-*)
+#   2. Local branches            (refs/heads/feature/NNN-*)
+#   3. All remote branches       (refs/remotes/*/feature/NNN-*)
+#   4. Tags                      (refs/tags/feature/NNN-*)
+#   5. Commit-message history    (catches branches that were merged & deleted)
 SPECS_DIR="specs"
 mkdir -p "$SPECS_DIR"
 
-# Numbers from local spec directories
-LOCAL_LAST=$(ls -1d "$SPECS_DIR"/[0-9]*-* 2>/dev/null | sed 's|.*/||' | grep -oE '^[0-9]+' | sort -n | tail -1 || true)
+# Refresh remotes so step 3 is up-to-date. We loudly warn (rather than silently
+# swallow) failures because stale remote data is the main way two contributors
+# end up choosing the same number.
+if ! git fetch --all --quiet 2>/dev/null; then
+  echo "Warning: 'git fetch --all' failed — remote branch numbers may be stale. The next feature number may collide with one already taken on another remote." >&2
+fi
 
-# Numbers from remote feature branches (feature/NNN-*)
-git fetch --quiet origin 2>/dev/null || true
-REMOTE_LAST=$(git branch -r 2>/dev/null | grep -oE 'feature/[0-9]+-' | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+# 1. Local spec directories
+LOCAL_SPEC_NUMS=$(ls -1d "$SPECS_DIR"/[0-9]*-* 2>/dev/null \
+  | sed 's|.*/||' \
+  | grep -oE '^[0-9]+' || true)
 
-# Take the higher of the two
-LAST=0
-[[ -n "$LOCAL_LAST" && "$LOCAL_LAST" -gt "$LAST" ]] && LAST=$LOCAL_LAST
-[[ -n "$REMOTE_LAST" && "$REMOTE_LAST" -gt "$LAST" ]] && LAST=$REMOTE_LAST
+# 2-4. Every ref (local heads + all remotes + tags) shaped like feature/NNN-*
+REF_NUMS=$(git for-each-ref --format='%(refname:short)' \
+    refs/heads refs/remotes refs/tags 2>/dev/null \
+  | grep -oE 'feature/[0-9]+-' \
+  | grep -oE '[0-9]+' || true)
+
+# 5. Commit history. --grep narrows the log walk so this stays fast on large
+#    repos; we still scan subject + body for the feature/NNN- substring, which
+#    catches squash-merge commits whose default message names the source branch.
+LOG_NUMS=$(git log --all --grep='feature/[0-9]\+-' --format='%s %b' 2>/dev/null \
+  | grep -oE 'feature/[0-9]+-' \
+  | grep -oE '[0-9]+' || true)
+
+LAST=$(printf '%s\n%s\n%s\n' "$LOCAL_SPEC_NUMS" "$REF_NUMS" "$LOG_NUMS" \
+  | grep -E '^[0-9]+$' \
+  | sort -n \
+  | tail -1)
+LAST=${LAST:-0}
 NEXT=$(printf "%03d" $((10#$LAST + 1)))
 
 FEATURE_DIR="$SPECS_DIR/${NEXT}-${SLUG}"
 BRANCH="feature/${NEXT}-${SLUG}"
+
+# Defense-in-depth: if the computed name still collides (race with a parallel
+# agent, gitignored spec dir, ref we somehow missed), bump and retry instead
+# of crashing in `git checkout -b`.
+ATTEMPTS=0
+while git show-ref --verify --quiet "refs/heads/$BRANCH" \
+   || git show-ref --verify --quiet "refs/tags/$BRANCH" \
+   || [[ -d "$FEATURE_DIR" ]]; do
+  ATTEMPTS=$((ATTEMPTS + 1))
+  if (( ATTEMPTS > 100 )); then
+    echo "Error: gave up after 100 attempts to find an unused feature number starting from $NEXT." >&2
+    exit 1
+  fi
+  NEXT=$(printf "%03d" $((10#$NEXT + 1)))
+  FEATURE_DIR="$SPECS_DIR/${NEXT}-${SLUG}"
+  BRANCH="feature/${NEXT}-${SLUG}"
+done
 
 # Create branch and directory
 git checkout -b "$BRANCH"

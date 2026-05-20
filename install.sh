@@ -98,6 +98,7 @@ FILES=(
   ".behavior-kit/templates/behavior-template.md"
   ".behavior-kit/scripts/init-feature.sh"
   ".behavior-kit/scripts/check-prereqs.sh"
+  ".behavior-kit/scripts/setup-worktrees.sh"
   ".behavior-kit/templates/review-template.md"
 )
 
@@ -109,7 +110,7 @@ for file in "${FILES[@]}"; do
 done
 
 # Make scripts executable
-chmod +x .behavior-kit/scripts/init-feature.sh .behavior-kit/scripts/check-prereqs.sh
+chmod +x .behavior-kit/scripts/init-feature.sh .behavior-kit/scripts/check-prereqs.sh .behavior-kit/scripts/setup-worktrees.sh
 
 # --local: hide bk files from git via .git/info/exclude
 if $LOCAL; then
