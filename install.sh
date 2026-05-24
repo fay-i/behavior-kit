@@ -6,21 +6,25 @@ set -euo pipefail
 #   Install into existing repo:  curl -fsSL ...install.sh | bash
 #   Install locally (hidden):    curl -fsSL ...install.sh | bash -s -- --local
 #   Create new project:          curl -fsSL ...install.sh | bash -s -- --init <project-name>
+#   Update existing install:     curl -fsSL ...install.sh | bash -s -- --update
 
 REPO="fay-i/behavior-kit"
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/scaffold"
 
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 DIM='\033[2m'
 NC='\033[0m'
 
 info() { echo -e "${GREEN}[behavior-kit]${NC} $1"; }
+warn() { echo -e "${YELLOW}[behavior-kit]${NC} $1"; }
 dim() { echo -e "${DIM}  $1${NC}"; }
 
 # Parse flags
 INIT=false
 LOCAL=false
+UPDATE=false
 PROJECT_NAME=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -33,9 +37,20 @@ while [[ $# -gt 0 ]]; do
       LOCAL=true
       shift
       ;;
+    --update)
+      UPDATE=true
+      shift
+      ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
+
+# --update and --init are mutually exclusive (one creates a project, the other
+# refreshes an existing install).
+if $UPDATE && $INIT; then
+  echo "Error: --update and --init can't be used together." >&2
+  exit 1
+fi
 
 # --init: create new project directory and git repo
 if $INIT; then
@@ -76,9 +91,14 @@ else
   fi
 fi
 
-info "Installing behavior-kit..."
+if $UPDATE; then
+  info "Updating behavior-kit to latest from ${BRANCH}..."
+else
+  info "Installing behavior-kit..."
+fi
 
-# Files to install (relative to scaffold/)
+# Files to install (relative to scaffold/). Order matters only for readability —
+# every file is independently downloaded.
 FILES=(
   ".claude/commands/bk.constitution.md"
   ".claude/commands/bk.specify.md"
@@ -86,37 +106,69 @@ FILES=(
   ".claude/commands/bk.behaviors.md"
   ".claude/commands/bk.implement.md"
   ".claude/commands/bk.iterate.md"
+  ".claude/commands/bk.session.md"
   ".cursor/rules/bk-constitution.mdc"
   ".cursor/rules/bk-specify.mdc"
   ".cursor/rules/bk-plan.mdc"
   ".cursor/rules/bk-behaviors.mdc"
   ".cursor/rules/bk-implement.mdc"
   ".cursor/rules/bk-iterate.mdc"
+  ".cursor/rules/bk-session.mdc"
+  ".agents/skills/bk-constitution/SKILL.md"
+  ".agents/skills/bk-specify/SKILL.md"
+  ".agents/skills/bk-plan/SKILL.md"
+  ".agents/skills/bk-behaviors/SKILL.md"
+  ".agents/skills/bk-implement/SKILL.md"
+  ".agents/skills/bk-iterate/SKILL.md"
+  ".agents/skills/bk-session/SKILL.md"
   ".behavior-kit/memory/constitution.md"
   ".behavior-kit/templates/spec-template.md"
   ".behavior-kit/templates/plan-template.md"
   ".behavior-kit/templates/behavior-template.md"
+  ".behavior-kit/templates/review-template.md"
   ".behavior-kit/scripts/init-feature.sh"
+  ".behavior-kit/scripts/init-session.sh"
   ".behavior-kit/scripts/check-prereqs.sh"
   ".behavior-kit/scripts/setup-worktrees.sh"
-  ".behavior-kit/templates/review-template.md"
 )
+
+# Files that hold user-edited state. On --update we leave these alone if the
+# user already has a copy; on fresh install they're seeded from the scaffold.
+PRESERVE_ON_UPDATE=(
+  ".behavior-kit/memory/constitution.md"
+)
+
+is_preserved() {
+  local needle="$1"
+  for f in "${PRESERVE_ON_UPDATE[@]}"; do
+    [[ "$f" == "$needle" ]] && return 0
+  done
+  return 1
+}
 
 # Download each file
 for file in "${FILES[@]}"; do
+  if $UPDATE && is_preserved "$file" && [[ -f "$file" ]]; then
+    dim "$file (preserved)"
+    continue
+  fi
   mkdir -p "$(dirname "$file")"
   curl -fsSL "${BASE_URL}/${file}" -o "$file"
   dim "$file"
 done
 
 # Make scripts executable
-chmod +x .behavior-kit/scripts/init-feature.sh .behavior-kit/scripts/check-prereqs.sh .behavior-kit/scripts/setup-worktrees.sh
+chmod +x .behavior-kit/scripts/init-feature.sh \
+         .behavior-kit/scripts/init-session.sh \
+         .behavior-kit/scripts/check-prereqs.sh \
+         .behavior-kit/scripts/setup-worktrees.sh
 
 # --local: hide bk files from git via .git/info/exclude
 if $LOCAL; then
   EXCLUDE_PATHS=(
     ".claude/commands/bk.*.md"
     ".cursor/rules/bk-*.mdc"
+    ".agents/skills/bk-*/"
     ".behavior-kit/"
   )
 
@@ -144,12 +196,19 @@ if $INIT; then
 fi
 
 echo ""
-info "Done! Commands available:"
-dim "/bk.constitution  — Set up project principles"
-dim "/bk.specify        — Write a feature spec"
-dim "/bk.plan           — Research codebase context"
-dim "/bk.behaviors      — Decompose into testable behaviors"
-dim "/bk.implement      — Execute behaviors test-first"
-dim "/bk.iterate        — Address PR review feedback"
-echo ""
-info "Start with: /bk.constitution"
+if $UPDATE; then
+  info "Updated. Constitution and specs/ left untouched; everything else refreshed from ${BRANCH}."
+else
+  info "Done! Commands available:"
+  dim "/bk.constitution  — Set up project principles"
+  dim "/bk.specify        — Write a feature spec"
+  dim "/bk.plan           — Research codebase context"
+  dim "/bk.behaviors      — Decompose into testable behaviors"
+  dim "/bk.implement      — Execute behaviors test-first"
+  dim "/bk.iterate        — Address PR review feedback"
+  dim "/bk.session        — Lightweight pairing / one-off session"
+  echo ""
+  dim "Codex users: slash names use hyphens (e.g. /bk-specify, /bk-session)."
+  echo ""
+  info "Start with: /bk.constitution"
+fi
