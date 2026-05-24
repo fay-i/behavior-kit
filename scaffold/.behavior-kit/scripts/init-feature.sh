@@ -52,7 +52,7 @@ LOG_NUMS=$(git log --all --grep='feature/[0-9]\+-' --format='%s %b' 2>/dev/null 
   | grep -oE '[0-9]+' || true)
 
 LAST=$(printf '%s\n%s\n%s\n' "$LOCAL_SPEC_NUMS" "$REF_NUMS" "$LOG_NUMS" \
-  | grep -E '^[0-9]+$' \
+  | { grep -E '^[0-9]+$' || true; } \
   | sort -n \
   | tail -1)
 LAST=${LAST:-0}
