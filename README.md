@@ -1,6 +1,6 @@
 # behavior-kit
 
-Behavior-first development framework for Claude Code and Cursor. Every task is a testable behavior. Architecture emerges from tests. No over-engineering.
+Behavior-first development framework for Claude Code, Cursor, and Codex. Every task is a testable behavior. Architecture emerges from tests. No over-engineering.
 
 ## Install
 
@@ -21,12 +21,19 @@ curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh 
 
 The `--local` flag adds behavior-kit paths to `.git/info/exclude` so the files stay invisible to git.
 
+**Update an existing install** to the latest scaffold on `main`:
+```bash
+curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash -s -- --update
+```
+
+`--update` refreshes every command/rule/skill/template/script file but **preserves `.behavior-kit/memory/constitution.md`** if it already exists, so your project's principles aren't overwritten. `specs/` and `sessions` branches are never touched.
+
 **Shell helper** (optional) — add to your `.zshrc` or `.bashrc`:
 ```bash
 bk() { curl -fsSL https://raw.githubusercontent.com/fay-i/behavior-kit/main/install.sh | bash -s -- "$@"; }
 ```
 
-Then use `bk`, `bk --local`, or `bk --init my-project`.
+Then use `bk`, `bk --local`, `bk --update`, or `bk --init my-project`.
 
 ## Workflow
 
@@ -46,9 +53,15 @@ Then use `bk`, `bk --local`, or `bk --init my-project`.
 /bk.iterate          Address PR review feedback (re-run per round)
 ```
 
+For one-off fixes, refactors, or interactive QA that don't justify the full pipeline:
+
+```
+/bk.session          Lightweight pairing session — branch + worktree, no spec
+```
+
 ## Commands
 
-Each command is a slash command in Claude Code (and an equivalent rule in Cursor). All feature-scoped commands accept the feature directory as an argument (e.g. `/bk.plan specs/001-user-login`) or infer it from the current branch.
+Each command is a slash command in Claude Code, an equivalent rule in Cursor, and a Codex skill (`/bk-<phase>` — Codex slash names can't contain dots, so `/bk.specify` becomes `/bk-specify`). All feature-scoped commands accept the feature directory as an argument (e.g. `/bk.plan specs/001-user-login`) or infer it from the current branch.
 
 | Command | Purpose | Reads | Writes |
 | --- | --- | --- | --- |
@@ -58,8 +71,11 @@ Each command is a slash command in Claude Code (and an equivalent rule in Cursor
 | `/bk.behaviors` | Decompose each acceptance criterion into atomic behaviors (Action + Input + Output + Test) with branches for edges/errors. Builds an AC → behavior coverage matrix. | constitution, `spec.md`, `plan.md`, behavior template | `specs/NNN-feature-name/behaviors.md` |
 | `/bk.implement` | Execute behaviors one at a time, test-first (red → green → refactor). Commits each as `B001: …`. Architecture (models, helpers, routes) emerges as behaviors demand it. | constitution, `behaviors.md` | source code + tests; commits per behavior |
 | `/bk.iterate` | Address one round of PR review feedback. Fetches comments via `gh`, categorizes them, makes changes one comment at a time, replies and resolves threads. Commits as `R1.01: …`. Re-run per round. | constitution, feature dir, PR comments via `gh` | code changes, GitHub replies, `specs/NNN-feature-name/review.md` |
+| `/bk.session [purpose]` | Start a lightweight pairing session for a one-off fix, refactor, or QA pass. Asks the user for the purpose (unless passed), picks a conventional-commit tag (`fix`/`chore`/`refactor`/`docs`/`test`/`ci`/`build`/`perf`/`style`/`revert` — never `feat`), and runs `init-session.sh` to create a `{tag}/{slug}` branch and matching `.worktrees/{tag}-{slug}/` checkout. No spec, plan, or behaviors — pair freely under the constitution. | constitution | `{tag}/{slug}` branch, optional worktree |
 
-All feature-scoped commands run `.behavior-kit/scripts/check-prereqs.sh <phase>` first and stop if prerequisites are missing — no constitution, no `Worktrees:` decision, or (for `plan|behaviors|implement|iterate`) running on `main`/`master`/`trunk`/`develop` or off the matching `feature/NNN-slug` branch. When worktrees are enabled, those same phases must run from inside the spec's `.worktrees/NNN-slug/` checkout; `/bk.specify` is the one phase that may legitimately start on `main`, because it's the phase that creates the feature branch. `/bk.iterate` additionally requires an authenticated `gh` CLI and an open PR on the current branch.
+All feature-scoped commands run `.behavior-kit/scripts/check-prereqs.sh <phase>` first and stop if prerequisites are missing — no constitution, no `Worktrees:` decision, or (for `plan|behaviors|implement|iterate`) running on `main`/`master`/`trunk`/`develop` or off the matching `feature/NNN-slug` branch. When worktrees are enabled, those same phases must run from inside the spec's `.worktrees/NNN-slug/` checkout; `/bk.specify` and `/bk.session` are the two phases that may legitimately start on `main`, because they're the phases that create the branch. `/bk.iterate` additionally requires an authenticated `gh` CLI and an open PR on the current branch.
+
+Because the trunk guard's regex pins the spec workflow to `feature/NNN-slug`, session branches (which use `fix/`, `chore/`, etc.) are deliberately walled off from `/bk.plan`, `/bk.behaviors`, `/bk.implement`, and `/bk.iterate` — if a one-off grows into a real feature, end the session and restart it via `/bk.specify`.
 
 ## Parallel agents & worktrees
 
@@ -76,6 +92,10 @@ Worktrees: enabled    # or: disabled
 - `/bk.plan` enumerates sibling specs and active worktrees before research and forces a turn with the user if the new feature overlaps with — or depends on unmerged work from — another in-flight spec, then records the verdict in the plan's "Dependencies / Coordination" section.
 
 With worktrees disabled the single-tree workflow still works; the trunk guard still fires (`feature/NNN-slug` is required), but no worktree path is enforced.
+
+## Codex support
+
+behavior-kit ships first-class skills for [OpenAI Codex CLI](https://github.com/openai/codex) alongside the Claude Code commands and Cursor rules. Each phase lives at `.agents/skills/bk-<phase>/SKILL.md` and Codex discovers them automatically — invoke as `/bk-<phase>` (Codex slash names can't contain dots, so `/bk.specify` becomes `/bk-specify`, `/bk.session` becomes `/bk-session`, and so on). The skill bodies are equivalent to the Claude versions; only the frontmatter and slash form differ.
 
 ## Philosophy
 
@@ -130,7 +150,7 @@ Re-run `/bk.iterate` for each new round of feedback. The round number auto-incre
 Remove the installed files:
 
 ```bash
-rm -rf .claude/commands/bk.*.md .cursor/rules/bk-*.mdc .behavior-kit/ .worktrees/
+rm -rf .claude/commands/bk.*.md .cursor/rules/bk-*.mdc .agents/skills/bk-*/ .behavior-kit/ .worktrees/
 ```
 
 If you used worktrees, run `git worktree prune` afterwards so git forgets the removed checkouts.

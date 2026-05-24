@@ -6,7 +6,7 @@ set -euo pipefail
 # the right worktree, when worktrees are enabled).
 #
 # Usage: check-prereqs.sh [phase]
-#   phase ∈ {specify, plan, behaviors, implement, iterate}
+#   phase ∈ {session, specify, plan, behaviors, implement, iterate}
 #   omitted = constitution-only checks (legacy behavior)
 
 PHASE="${1:-}"
@@ -27,12 +27,13 @@ if ! grep -qE '^Worktrees:' "$CONSTITUTION"; then
   exit 1
 fi
 
-# /bk.specify starts from main (it's the phase that *creates* the feature
-# branch), and an un-phased invocation keeps the legacy contract. Everything
-# else has to be on a feature branch — and, when worktrees are on, inside the
-# matching .worktrees/<NNN-slug>/ checkout.
+# /bk.specify and /bk.session both start from main — they're the phases that
+# *create* their branch — so they only need the constitution checks above. An
+# un-phased invocation keeps the legacy contract. Everything else has to be on
+# a feature branch and, when worktrees are on, inside the matching
+# .worktrees/<NNN-slug>/ checkout.
 case "$PHASE" in
-  ""|specify)
+  ""|specify|session)
     exit 0
     ;;
   plan|behaviors|implement|iterate)
