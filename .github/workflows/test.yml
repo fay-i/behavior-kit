@@ -1,0 +1,23 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "ci@behavior-kit.local"
+          git config --global user.name "behavior-kit CI"
+          git config --global init.defaultBranch main
+
+      - name: Run tests
+        env:
+          BEHAVIOR_KIT_BASE_URL: file://${{ github.workspace }}/scaffold
+        run: bash tests/run.sh
