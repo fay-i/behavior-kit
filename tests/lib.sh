@@ -57,22 +57,23 @@ install_bk_with_worktrees() {
 }
 
 # ---- Assertions -------------------------------------------------------------
-# All assertions return 1 on failure. Tests run under `set -e` in a subshell,
-# so a failed assertion aborts the test function and the runner records a fail.
+# Each assertion exits 1 on failure. Tests run in a subshell (see run.sh), so
+# exiting aborts only the current test and the runner records it as a fail.
 
 _fail() {
-  echo "  ASSERTION FAILED: $*" >&2
-  return 1
+  echo "  ASSERTION FAILED: $1" >&2
+  shift
+  while (( $# > 0 )); do
+    echo "    $1" >&2
+    shift
+  done
+  exit 1
 }
 
 assert_eq() {
   local expected="$1" actual="$2" msg="${3:-values differ}"
-  if [[ "$expected" != "$actual" ]]; then
-    _fail "$msg"
-    echo "    expected: $expected" >&2
-    echo "    actual:   $actual" >&2
-    return 1
-  fi
+  [[ "$expected" == "$actual" ]] && return 0
+  _fail "$msg" "expected: $expected" "actual:   $actual"
 }
 
 assert_file_exists() {
@@ -97,10 +98,7 @@ assert_executable() {
 
 assert_grep() {
   local pattern="$1" file="$2"
-  if [[ ! -f "$file" ]]; then
-    _fail "assert_grep: file not found: $file"
-    return 1
-  fi
+  [[ -f "$file" ]] || _fail "assert_grep: file not found: $file"
   grep -qE "$pattern" "$file" || _fail "expected '$file' to match: $pattern"
 }
 
@@ -127,28 +125,25 @@ capture() {
 }
 
 assert_rc_zero() {
-  if (( ASSERT_RC != 0 )); then
-    _fail "expected exit 0, got $ASSERT_RC"
-    [[ -n "$ASSERT_STDOUT" ]] && echo "    stdout: $ASSERT_STDOUT" >&2
-    [[ -n "$ASSERT_STDERR" ]] && echo "    stderr: $ASSERT_STDERR" >&2
-    return 1
-  fi
+  (( ASSERT_RC == 0 )) && return 0
+  echo "  ASSERTION FAILED: expected exit 0, got $ASSERT_RC" >&2
+  [[ -n "$ASSERT_STDOUT" ]] && echo "    stdout: $ASSERT_STDOUT" >&2
+  [[ -n "$ASSERT_STDERR" ]] && echo "    stderr: $ASSERT_STDERR" >&2
+  exit 1
 }
 
 assert_rc_nonzero() {
-  if (( ASSERT_RC == 0 )); then
-    _fail "expected non-zero exit, got 0"
-    [[ -n "$ASSERT_STDOUT" ]] && echo "    stdout: $ASSERT_STDOUT" >&2
-    [[ -n "$ASSERT_STDERR" ]] && echo "    stderr: $ASSERT_STDERR" >&2
-    return 1
-  fi
+  (( ASSERT_RC != 0 )) && return 0
+  echo "  ASSERTION FAILED: expected non-zero exit, got 0" >&2
+  [[ -n "$ASSERT_STDOUT" ]] && echo "    stdout: $ASSERT_STDOUT" >&2
+  [[ -n "$ASSERT_STDERR" ]] && echo "    stderr: $ASSERT_STDERR" >&2
+  exit 1
 }
 
 assert_stderr_contains() {
   local needle="$1"
-  if [[ "$ASSERT_STDERR" != *"$needle"* ]]; then
-    _fail "expected stderr to contain: $needle"
-    echo "    stderr: $ASSERT_STDERR" >&2
-    return 1
-  fi
+  [[ "$ASSERT_STDERR" == *"$needle"* ]] && return 0
+  echo "  ASSERTION FAILED: expected stderr to contain: $needle" >&2
+  echo "    stderr: $ASSERT_STDERR" >&2
+  exit 1
 }
