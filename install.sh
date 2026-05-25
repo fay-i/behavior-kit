@@ -10,7 +10,7 @@ set -euo pipefail
 
 REPO="fay-i/behavior-kit"
 BRANCH="main"
-BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/scaffold"
+BASE_URL="${BEHAVIOR_KIT_BASE_URL:-https://raw.githubusercontent.com/${REPO}/${BRANCH}/scaffold}"
 
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
