@@ -57,16 +57,29 @@ case "$CURRENT_BRANCH" in
     ;;
 esac
 
-if [[ ! "$CURRENT_BRANCH" =~ ^feature/[0-9]+-[a-z0-9-]+$ ]]; then
+SESSION_TAGS='fix|chore|refactor|docs|test|ci|build|perf|style|revert'
+EXPECTED_WORKTREE_SUFFIX=""
+if [[ "$CURRENT_BRANCH" =~ ^feature/[0-9]+-[a-z0-9-]+$ ]]; then
+  EXPECTED_WORKTREE_SUFFIX="${CURRENT_BRANCH#feature/}"
+elif [[ "$PHASE" == "iterate" ]]; then
+  # /bk.iterate just drives PR review on whatever branch is checked out, so any
+  # non-trunk branch is fine — including legacy worktrees created before
+  # init-session.sh existed. When the branch matches the session 'tag/slug'
+  # shape, we still know the expected worktree path; otherwise we skip that
+  # enforcement (the user picked the worktree layout themselves).
+  if [[ "$CURRENT_BRANCH" =~ ^(${SESSION_TAGS})/[a-z0-9-]+$ ]]; then
+    EXPECTED_WORKTREE_SUFFIX="${CURRENT_BRANCH/\//-}"
+  fi
+else
   echo "Error: /bk.$PHASE expects a 'feature/NNN-slug' branch, got '$CURRENT_BRANCH'." >&2
   exit 1
 fi
 
 # Worktree enforcement: when the constitution opted in, every non-specify phase
-# must execute inside the .worktrees/<NNN-slug>/ checkout that init-feature.sh
-# created, so two agents on different specs can never trample each other.
-if grep -qE '^Worktrees:[[:space:]]*enabled[[:space:]]*$' "$CONSTITUTION"; then
-  EXPECTED_SUFFIX="${CURRENT_BRANCH#feature/}"
+# must execute inside the matching .worktrees/<suffix>/ checkout, so two agents
+# on different branches can never trample each other.
+if [[ -n "$EXPECTED_WORKTREE_SUFFIX" ]] && grep -qE '^Worktrees:[[:space:]]*enabled[[:space:]]*$' "$CONSTITUTION"; then
+  EXPECTED_SUFFIX="$EXPECTED_WORKTREE_SUFFIX"
   EXPECTED_WORKTREE_FRAGMENT="/.worktrees/${EXPECTED_SUFFIX}"
   CWD=$(pwd)
   if [[ "$CWD" != *"$EXPECTED_WORKTREE_FRAGMENT" && "$CWD" != *"$EXPECTED_WORKTREE_FRAGMENT/"* ]]; then
