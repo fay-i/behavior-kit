@@ -42,7 +42,7 @@ Then use `bk`, `bk --local`, `bk --update`, or `bk --init my-project`.
         ↓
 /bk.specify          Write a feature spec (Given/When/Then)
         ↓
-/bk.plan             Research existing codebase context
+/bk.plan             Research codebase + current implementation context
         ↓
 /bk.behaviors        Decompose into atomic, testable behaviors
         ↓
@@ -67,7 +67,7 @@ Each command is a slash command in Claude Code, an equivalent rule in Cursor, an
 | --- | --- | --- | --- |
 | `/bk.constitution` | Define or amend the 5 foundational articles plus any project-specific ones. Asks the worktree decision first (`Worktrees: enabled` or `disabled`) and runs `setup-worktrees.sh` when enabled. Run once per project. | `.behavior-kit/memory/constitution.md` | `.behavior-kit/memory/constitution.md`, optionally `.worktrees/` + `.gitignore` |
 | `/bk.specify <description>` | Turn a feature idea into a Given/When/Then spec. Creates the feature branch and `specs/NNN-feature-name/` directory via `init-feature.sh`; when worktrees are enabled, also provisions `.worktrees/NNN-slug/` so the spec (and every later phase) is isolated from `main`. Max 3 inline clarifying questions. | constitution, spec template | feature branch, `specs/NNN-feature-name/spec.md`, optionally `.worktrees/NNN-slug/` |
-| `/bk.plan` | Research-only pass over the existing codebase to capture patterns, touch points, and open questions. Before researching, scans sibling specs and active worktrees and **forces a turn with the user** on any scope overlap or unmerged dependency. Does not propose architecture. | constitution, `spec.md`, sibling specs, plan template, codebase | `specs/NNN-feature-name/plan.md` (incl. Dependencies / Coordination verdicts) |
+| `/bk.plan` | Research pass over the existing codebase and current implementation landscape. Captures patterns, touch points, open questions, and non-binding recommendations with tradeoffs. Recommendations should favor the smallest change that achieves the desired behavior. Before researching, scans sibling specs and active worktrees and **forces a turn with the user** on any scope overlap or unmerged dependency. Makes recommendations, not decisions. | constitution, `spec.md`, sibling specs, plan template, codebase, current external references | `specs/NNN-feature-name/plan.md` (incl. Dependencies / Coordination verdicts and Current Landscape Recommendations) |
 | `/bk.behaviors` | Decompose each acceptance criterion into atomic behaviors (Action + Input + Output + Test) with branches for edges/errors. Builds an AC → behavior coverage matrix. | constitution, `spec.md`, `plan.md`, behavior template | `specs/NNN-feature-name/behaviors.md` |
 | `/bk.implement` | Execute behaviors one at a time, test-first (red → green → refactor). Commits each as `B001: …`. Architecture (models, helpers, routes) emerges as behaviors demand it. | constitution, `behaviors.md` | source code + tests; commits per behavior |
 | `/bk.iterate` | Address one round of PR review feedback. Fetches comments via `gh`, categorizes them, makes changes one comment at a time, replies and resolves threads. Commits as `R1.01: …`. Re-run per round. | constitution, feature dir, PR comments via `gh` | code changes, GitHub replies, `specs/NNN-feature-name/review.md` |
