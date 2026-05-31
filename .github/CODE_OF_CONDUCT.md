@@ -37,7 +37,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement by contacting the maintainer ([@fay-i](https://github.com/fay-i)) privately through their GitHub profile, or via GitHub's Report content / abuse feature. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainers at [admin@fay-i.com](mailto:admin@fay-i.com). If the behavior occurs on GitHub, reporters may also use GitHub's Report content / abuse feature. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
