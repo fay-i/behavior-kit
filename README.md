@@ -1,6 +1,8 @@
 # behavior-kit
 
-Behavior-first development framework for Claude Code, Cursor, and Codex. Every task is a testable behavior. Architecture emerges from tests. No over-engineering.
+behavior-kit is a behavior-first development framework for teams using AI coding agents such as Claude Code, OpenAI Codex, and Cursor. It gives agents a spec-driven, behavior-driven, test-first workflow: define the project constitution, write a lean Given/When/Then spec, plan from the existing codebase, decompose the work into atomic behaviors, and implement each behavior with tests first.
+
+It exists to solve a common agentic-development problem: AI assistants can move fast, but they also drift, overbuild, and lose the thread when product intent, test evidence, and architecture decisions are not explicit. behavior-kit keeps every change tied to observable behavior so architecture emerges from passing tests instead of speculation.
 
 ## Install
 
@@ -96,6 +98,10 @@ With worktrees disabled the single-tree workflow still works; the trunk guard st
 ## Codex support
 
 behavior-kit ships first-class skills for [OpenAI Codex CLI](https://github.com/openai/codex) alongside the Claude Code commands and Cursor rules. Each phase lives at `.agents/skills/bk-<phase>/SKILL.md` and Codex discovers them automatically — invoke as `/bk-<phase>` (Codex slash names can't contain dots, so `/bk.specify` becomes `/bk-specify`, `/bk.session` becomes `/bk-session`, and so on). The skill bodies are equivalent to the Claude versions; only the frontmatter and slash form differ.
+
+## Using behavior-kit?
+
+If behavior-kit is useful in your AI coding workflow, a GitHub star helps other developers find it. Questions, bug reports, workflow notes, and links to public usage examples are welcome in GitHub issues or discussions.
 
 ## Philosophy
 
