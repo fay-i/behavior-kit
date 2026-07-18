@@ -8,7 +8,7 @@ set -euo pipefail
 #   Create new project:          curl -fsSL ...install.sh | bash -s -- --init <project-name>
 #   Update existing install:     curl -fsSL ...install.sh | bash -s -- --update
 
-REPO="fay-i/behavior-kit"
+REPO="krnl-panic/behavior-kit"
 BRANCH="main"
 BASE_URL="${BEHAVIOR_KIT_BASE_URL:-https://raw.githubusercontent.com/${REPO}/${BRANCH}/scaffold}"
 
