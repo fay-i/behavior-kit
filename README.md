@@ -53,6 +53,8 @@ Then use `bk`, `bk --local`, `bk --update`, or `bk --init my-project`.
    push & open PR
         ↓
 /bk.iterate          Address PR review feedback (re-run per round)
+        ↓ or, to drive the loop autonomously:
+/bk.monitor          Watch CodeRabbit rounds, fix critical/major findings, repeat to merge-ready
 ```
 
 For one-off fixes, refactors, or interactive QA that don't justify the full pipeline:
@@ -74,6 +76,7 @@ Each command is a slash command in Claude Code, an equivalent rule in Cursor, an
 | `/bk.implement` | Execute behaviors one at a time, test-first (red → green → refactor). Commits each as `B001: …`. Architecture (models, helpers, routes) emerges as behaviors demand it. | constitution, `behaviors.md` | source code + tests; commits per behavior |
 | `/bk.iterate` | Address one round of PR review feedback. Fetches comments via `gh`, categorizes them, makes changes one comment at a time, replies and resolves threads. Commits as `R1.01: …`. Re-run per round. | constitution, feature dir, PR comments via `gh` | code changes, GitHub replies, `specs/NNN-feature-name/review.md` |
 | `/bk.session [purpose]` | Start a lightweight pairing session for a one-off fix, refactor, or QA pass. Asks the user for the purpose (unless passed), picks a conventional-commit tag (`fix`/`chore`/`refactor`/`docs`/`test`/`ci`/`build`/`perf`/`style`/`revert` — never `feat`), and runs `init-session.sh` to create a `{tag}/{slug}` branch and matching `.worktrees/{tag}-{slug}/` checkout. No spec, plan, or behaviors — pair freely under the constitution. | constitution | `{tag}/{slug}` branch, optional worktree |
+| `/bk.monitor <PR>` | Drive a pushed PR's automated review loop to merge-ready: poll for CodeRabbit rounds, fix every critical/major finding (sensible minors at your discretion), reply to every thread, push, repeat. Stops (never merges) after a clean round with green checks, or escalates past 5 rounds / an out-of-scope finding / an unresponsive review bot. | constitution, PR review comments via `gh` | code changes, GitHub replies; never merges |
 
 All feature-scoped commands run `.behavior-kit/scripts/check-prereqs.sh <phase>` first and stop if prerequisites are missing — no constitution, no `Worktrees:` decision, or (for `plan|behaviors|implement|iterate`) running on `main`/`master`/`trunk`/`develop` or off the matching `feature/NNN-slug` branch. When worktrees are enabled, those same phases must run from inside the spec's `.worktrees/NNN-slug/` checkout; `/bk.specify` and `/bk.session` are the two phases that may legitimately start on `main`, because they're the phases that create the branch. `/bk.iterate` additionally requires an authenticated `gh` CLI and an open PR on the current branch.
 
@@ -98,6 +101,20 @@ With worktrees disabled the single-tree workflow still works; the trunk guard st
 ## Codex support
 
 behavior-kit ships first-class skills for [OpenAI Codex CLI](https://github.com/openai/codex) alongside the Claude Code commands and Cursor rules. Each phase lives at `.agents/skills/bk-<phase>/SKILL.md` and Codex discovers them automatically — invoke as `/bk-<phase>` (Codex slash names can't contain dots, so `/bk.specify` becomes `/bk-specify`, `/bk.session` becomes `/bk-session`, and so on). The skill bodies are equivalent to the Claude versions; only the frontmatter and slash form differ.
+
+## Orchestration agents (Claude Code)
+
+For running multiple features in parallel under one orchestrating session, behavior-kit ships a roster of Claude Code subagent definitions at `.claude/agents/`:
+
+| Agent | Model | Role |
+| --- | --- | --- |
+| `bk-specify`, `bk-plan`, `bk-behaviors`, `bk-implement` | Opus, high effort | Run one phase each for a single feature, for orchestrators that want phase-level checkpoints |
+| `implementation-agent` | Opus, high effort | Runs a feature end to end (specify → plan → behaviors → implement) in one shot |
+| `bk-enhance` | Sonnet | Small, well-bounded fixes/refactors/doc touch-ups outside the full spec chain |
+| `bk-verify` | Sonnet | Read-only verification of a merge/integration gate — runs checks, reports evidence, fixes nothing |
+| `pr-monitor` | Sonnet | Runs the `/bk.monitor` loop on a pushed PR |
+
+The pattern: a frontier-model session quarterbacks the overall plan and delegates, Opus agents do the heavier spec/plan/behaviors/implementation work, and Sonnet agents handle the lighter review/verify/monitor loops. These are optional — hand-run the `/bk.*` commands yourself if you don't need multi-agent orchestration.
 
 ## Using behavior-kit?
 
@@ -156,7 +173,8 @@ Re-run `/bk.iterate` for each new round of feedback. The round number auto-incre
 Remove the installed files:
 
 ```bash
-rm -rf .claude/commands/bk.*.md .cursor/rules/bk-*.mdc .agents/skills/bk-*/ .behavior-kit/ .worktrees/
+rm -rf .claude/commands/bk.*.md .claude/agents/bk-*.md .claude/agents/implementation-agent.md \
+       .claude/agents/pr-monitor.md .cursor/rules/bk-*.mdc .agents/skills/bk-*/ .behavior-kit/ .worktrees/
 ```
 
 If you used worktrees, run `git worktree prune` afterwards so git forgets the removed checkouts.
