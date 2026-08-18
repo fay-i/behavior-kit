@@ -57,6 +57,10 @@ Then use `bk`, `bk --local`, `bk --update`, or `bk --init my-project`.
 /bk.monitor          Watch CodeRabbit rounds, fix critical/major findings, repeat to merge-ready
 ```
 
+For an initiative spanning several features, `/bk.quarterback` sits above that pipeline —
+it waves the features, dispatches the roster through these same phases, gates their
+evidence, and drives each PR to merge-readiness. It orchestrates; it never builds.
+
 For one-off fixes, refactors, or interactive QA that don't justify the full pipeline:
 
 ```
@@ -77,6 +81,7 @@ Each command is a slash command in Claude Code, an equivalent rule in Cursor, an
 | `/bk.iterate` | Address one round of PR review feedback. Fetches comments via `gh`, categorizes them, makes changes one comment at a time, replies and resolves threads. Commits as `R1.01: …`. Re-run per round. | constitution, feature dir, PR comments via `gh` | code changes, GitHub replies, `specs/NNN-feature-name/review.md` |
 | `/bk.session [purpose]` | Start a lightweight pairing session for a one-off fix, refactor, or QA pass. Asks the user for the purpose (unless passed), picks a conventional-commit tag (`fix`/`chore`/`refactor`/`docs`/`test`/`ci`/`build`/`perf`/`style`/`revert` — never `feat`), and runs `init-session.sh` to create a `{tag}/{slug}` branch and matching `.worktrees/{tag}-{slug}/` checkout. No spec, plan, or behaviors — pair freely under the constitution. | constitution | `{tag}/{slug}` branch, optional worktree |
 | `/bk.monitor <PR>` | Drive a pushed PR's automated review loop to merge-ready: poll for CodeRabbit rounds, fix every critical/major finding (sensible minors at your discretion), reply to every thread, push, repeat. Stops (never merges) after a clean round with green checks, or escalates past 5 rounds / an out-of-scope finding / an unresponsive review bot. | constitution, PR review comments via `gh` | code changes, GitHub replies; never merges |
+| `/bk.quarterback <features>` | Orchestrate an initiative spanning several features: dependency-ordered waves, one builder per feature in its own worktree, one monitor per PR driven by its thread lead, `bk-integrate` to land each, `bk-verify` to close each wave. Confirms the wave plan with the owner before launching, and never builds anything itself. | constitution, the feature list / epic / tracker query, `gh` | a confirmed wave plan, dispatched agents, merged PRs |
 
 All feature-scoped commands run `.behavior-kit/scripts/check-prereqs.sh <phase>` first and stop if prerequisites are missing — no constitution, no `Worktrees:` decision, or (for `plan|behaviors|implement|iterate`) running on `main`/`master`/`trunk`/`develop` or off the matching `feature/NNN-slug` branch. When worktrees are enabled, those same phases must run from inside the spec's `.worktrees/NNN-slug/` checkout; `/bk.specify` and `/bk.session` are the two phases that may legitimately start on `main`, because they're the phases that create the branch. `/bk.iterate` additionally requires an authenticated `gh` CLI and an open PR on the current branch.
 
@@ -113,8 +118,9 @@ For running multiple features in parallel under one orchestrating session, behav
 | `bk-enhance` | Sonnet | Small, well-bounded fixes/refactors/doc touch-ups outside the full spec chain |
 | `bk-verify` | Sonnet | Read-only verification of a merge/integration gate — runs checks, reports evidence, fixes nothing |
 | `pr-monitor` | Sonnet | Runs the `/bk.monitor` loop on a pushed PR |
+| `bk-integrate` | Sonnet | Merge surgeon — lands one review-clean, green branch and verifies from git that it landed |
 
-The pattern: a frontier-model session quarterbacks the overall plan and delegates, Opus agents do the heavier spec/plan/behaviors/implementation work, and Sonnet agents handle the lighter review/verify/monitor loops. These are optional — hand-run the `/bk.*` commands yourself if you don't need multi-agent orchestration.
+The pattern: a frontier-model session quarterbacks the overall plan and delegates, Opus agents do the heavier spec/plan/behaviors/implementation work, and Sonnet agents handle the lighter review/verify/monitor loops. `/bk.quarterback` is that orchestrating session written down — the wave plan, the dispatch briefs, the merge bar, the nesting cap (quarterback → thread lead → pr-monitor), and the watchdog primitives that keep long runs honest. These are optional — hand-run the `/bk.*` commands yourself if you don't need multi-agent orchestration.
 
 ## Using behavior-kit?
 

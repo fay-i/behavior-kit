@@ -19,12 +19,14 @@ test_install_init_creates_project() {
   assert_file_exists demo/.behavior-kit/scripts/init-feature.sh
   assert_file_exists demo/.claude/commands/bk.specify.md
   assert_file_exists demo/.claude/commands/bk.monitor.md
+  assert_file_exists demo/.claude/commands/bk.quarterback.md
   assert_file_exists demo/.claude/agents/bk-specify.md
   assert_file_exists demo/.claude/agents/implementation-agent.md
   assert_file_exists demo/.claude/agents/pr-monitor.md
   assert_file_exists demo/.cursor/rules/bk-specify.mdc
   assert_file_exists demo/.agents/skills/bk-specify/SKILL.md
   assert_file_exists demo/.agents/skills/bk-monitor/SKILL.md
+  assert_file_exists demo/.agents/skills/bk-quarterback/SKILL.md
   local branch commits
   branch=$(cd demo && git rev-parse --abbrev-ref HEAD)
   assert_eq "main" "$branch" "expected initial branch to be main"
@@ -43,6 +45,7 @@ test_install_fresh_in_existing_repo() {
   assert_file_exists .behavior-kit/memory/constitution.md
   assert_file_exists .behavior-kit/templates/spec-template.md
   assert_file_exists .claude/commands/bk.monitor.md
+  assert_file_exists .claude/commands/bk.quarterback.md
   assert_file_exists .claude/agents/bk-specify.md
   assert_file_exists .claude/agents/bk-plan.md
   assert_file_exists .claude/agents/bk-behaviors.md
@@ -51,7 +54,9 @@ test_install_fresh_in_existing_repo() {
   assert_file_exists .claude/agents/bk-enhance.md
   assert_file_exists .claude/agents/bk-verify.md
   assert_file_exists .claude/agents/pr-monitor.md
+  assert_file_exists .claude/agents/bk-integrate.md
   assert_file_exists .agents/skills/bk-monitor/SKILL.md
+  assert_file_exists .agents/skills/bk-quarterback/SKILL.md
   assert_dir_exists specs
   assert_executable .behavior-kit/scripts/init-feature.sh
   assert_executable .behavior-kit/scripts/init-session.sh
