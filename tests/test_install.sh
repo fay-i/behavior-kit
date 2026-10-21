@@ -18,8 +18,15 @@ test_install_init_creates_project() {
   assert_file_exists demo/.behavior-kit/memory/constitution.md
   assert_file_exists demo/.behavior-kit/scripts/init-feature.sh
   assert_file_exists demo/.claude/commands/bk.specify.md
+  assert_file_exists demo/.claude/commands/bk.monitor.md
+  assert_file_exists demo/.claude/commands/bk.quarterback.md
+  assert_file_exists demo/.claude/agents/bk-specify.md
+  assert_file_exists demo/.claude/agents/implementation-agent.md
+  assert_file_exists demo/.claude/agents/pr-monitor.md
   assert_file_exists demo/.cursor/rules/bk-specify.mdc
   assert_file_exists demo/.agents/skills/bk-specify/SKILL.md
+  assert_file_exists demo/.agents/skills/bk-monitor/SKILL.md
+  assert_file_exists demo/.agents/skills/bk-quarterback/SKILL.md
   local branch commits
   branch=$(cd demo && git rev-parse --abbrev-ref HEAD)
   assert_eq "main" "$branch" "expected initial branch to be main"
@@ -37,6 +44,19 @@ test_install_fresh_in_existing_repo() {
   assert_file_exists .behavior-kit/scripts/setup-worktrees.sh
   assert_file_exists .behavior-kit/memory/constitution.md
   assert_file_exists .behavior-kit/templates/spec-template.md
+  assert_file_exists .claude/commands/bk.monitor.md
+  assert_file_exists .claude/commands/bk.quarterback.md
+  assert_file_exists .claude/agents/bk-specify.md
+  assert_file_exists .claude/agents/bk-plan.md
+  assert_file_exists .claude/agents/bk-behaviors.md
+  assert_file_exists .claude/agents/bk-implement.md
+  assert_file_exists .claude/agents/implementation-agent.md
+  assert_file_exists .claude/agents/bk-enhance.md
+  assert_file_exists .claude/agents/bk-verify.md
+  assert_file_exists .claude/agents/pr-monitor.md
+  assert_file_exists .claude/agents/bk-integrate.md
+  assert_file_exists .agents/skills/bk-monitor/SKILL.md
+  assert_file_exists .agents/skills/bk-quarterback/SKILL.md
   assert_dir_exists specs
   assert_executable .behavior-kit/scripts/init-feature.sh
   assert_executable .behavior-kit/scripts/init-session.sh
@@ -57,6 +77,9 @@ test_install_local_excludes() {
   local exclude=".git/info/exclude"
   assert_file_exists "$exclude"
   assert_grep '\.claude/commands/bk\.\*\.md' "$exclude"
+  assert_grep '\.claude/agents/bk-\*\.md' "$exclude"
+  assert_grep '\.claude/agents/implementation-agent\.md' "$exclude"
+  assert_grep '\.claude/agents/pr-monitor\.md' "$exclude"
   assert_grep '\.cursor/rules/bk-\*\.mdc' "$exclude"
   assert_grep '\.agents/skills/bk-\*/' "$exclude"
   assert_grep '\.behavior-kit/' "$exclude"
